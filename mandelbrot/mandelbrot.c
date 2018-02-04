@@ -41,12 +41,22 @@ void mandelbrot_grid(int *M)
     
 }
 
+void write_to_file(int *M)
+{
+    FILE *fp = fopen("color.txt", "w");
+    for (int j = 0; j < H; ++j) {
+        for (int i = 0; i < W; ++i) {
+            fprintf(fp, "%hhu", M[i + j*W]);
+        }
+        fprintf(fp, "\n");
+    }
+    fclose(fp);
+}
+
 int main()
 {
     int M[W*H];
     mandelbrot_grid(M);
-    for (int i = 0; i < W*H; ++i) {
-        printf("%d\n", M[i]);
-    }
+    write_to_file(M);
     return 0;
 }
