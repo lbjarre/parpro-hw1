@@ -4,8 +4,8 @@
 
 #define MAXITER 255
 
-#define W 16
-#define H 16
+#define W 256
+#define H 256
 #define B 2.0
 
 int mandelbrot(complex double c)
@@ -33,7 +33,7 @@ void mandelbrot_grid(int *M)
     for (int j = 0; j < H; ++j) {
         y = j * dy - B;
         for (int i = 0; i < W; ++i) {
-            y = i * dx - B;
+            x = i * dx - B;
             c = x + y * I;
             M[i + j*H] = mandelbrot(c);
         }
