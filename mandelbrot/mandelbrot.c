@@ -46,7 +46,7 @@ void write_to_file(int *M)
     FILE *fp = fopen("color.txt", "w");
     for (int j = 0; j < H; ++j) {
         for (int i = 0; i < W; ++i) {
-            fprintf(fp, "%hhu", M[i + j*W]);
+            fprintf(fp, "%hhu ", M[i + j*W]);
         }
         fprintf(fp, "\n");
     }
