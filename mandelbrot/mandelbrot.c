@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <complex.h>
+#include <mpi.h>
 
 #define MAXITER 255
 
@@ -21,18 +22,17 @@ int mandelbrot(complex double c)
     return i;
 }
 
-void mandelbrot_grid(int *M)
+void mandelbrot_grid(int *M, int x_offset, int p_width)
 {
     double x, y;
     complex double c;
-    int color;
 
     double dx = 2*B/(W - 1);
     double dy = 2*B/(H - 1);
     
     for (int j = 0; j < H; ++j) {
         y = j * dy - B;
-        for (int i = 0; i < W; ++i) {
+        for (int i = x_offset; i < p_width; ++i) {
             x = i * dx - B;
             c = x + y * I;
             M[i + j*H] = mandelbrot(c);
@@ -53,10 +53,24 @@ void write_to_file(int *M)
     fclose(fp);
 }
 
-int main()
+int main(int argc, char **argv)
 {
-    int M[W*H];
-    mandelbrot_grid(M);
+    int rank, size, x_offset, p_w, tag, rc;
+    MPI_Status status;
+
+    rc = MPI_Init(&argc, &argv);
+    rc = MPI_Comm_size(MPI_COMM_WORLD, &size);
+    rc = MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    tag = 10;
+
+    p_w = W / size;
+    x_offset = rank * p_w;
+
+    int M[H*p_w];
+
+    mandelbrot_grid(M, x_offset, p_w);
     write_to_file(M);
+
+    rc = MPI_Finalize();
     return 0;
 }
