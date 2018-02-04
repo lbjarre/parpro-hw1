@@ -1,12 +1,13 @@
 #include <stdio.h>
+#include <string.h>
 #include <math.h>
 #include <complex.h>
 #include <mpi.h>
 
 #define MAXITER 255
 
-#define W 256
-#define H 256
+#define W 1024
+#define H 1024
 #define B 2.0
 
 int mandelbrot(complex double c)
@@ -66,16 +67,19 @@ int main(int argc, char **argv)
 
     int M[W*p_h];
     mandelbrot_grid(M, y_offset, p_h);
-    MPI_Send(M, H*p_h, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    if (rank != 0) {
+        MPI_Send(M, H*p_h, MPI_INT, 0, 0, MPI_COMM_WORLD);
+    }
 
     if (rank == 0) {
         int full_array[H*W];
-        int buff_array[W*p_h];
-        for (int i = 0; i < size; ++i) {
-            MPI_Recv(buff_array, W*p_h, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
-            for (int j = 0; j < W*p_h; ++j) {
-                full_array[i*W*p_h + j] = buff_array[j];
-            }
+        int *p = full_array;
+        for (int i = 0; i < W*p_h; ++i) {
+            *p++ = M[i];
+        }
+        for (int i = 1; i < size; ++i) {
+            MPI_Recv(p, W*p_h, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
+            p += W*p_h;
         }
         write_to_file(full_array);
     }
