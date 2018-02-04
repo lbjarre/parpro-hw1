@@ -22,23 +22,22 @@ int mandelbrot(complex double c)
     return i;
 }
 
-void mandelbrot_grid(int *M, int x_offset, int p_width)
+void mandelbrot_grid(int *M, int y_offset, int p_height)
 {
     double x, y;
     complex double c;
 
     double dx = 2*B/(W - 1);
-    double dy = 2*B/(H - 1);
-    
-    for (int j = 0; j < H; ++j) {
-        y = j * dy - B;
-        for (int i = x_offset; i < p_width; ++i) {
+    double dy = 2*B/(H - 1); 
+
+    for (int j = 0; j < p_height; ++j) {
+        y = (j + y_offset) * dy - B;
+        for (int i = 0; i < W; ++i) {
             x = i * dx - B;
             c = x + y * I;
-            M[i + j*H] = mandelbrot(c);
+            M[j*W + i] = mandelbrot(c);
         }
     }
-    
 }
 
 void write_to_file(int *M)
@@ -55,22 +54,32 @@ void write_to_file(int *M)
 
 int main(int argc, char **argv)
 {
-    int rank, size, x_offset, p_w, tag, rc;
+    int rank, size, y_offset, p_h;
     MPI_Status status;
 
-    rc = MPI_Init(&argc, &argv);
-    rc = MPI_Comm_size(MPI_COMM_WORLD, &size);
-    rc = MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    tag = 10;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    p_w = W / size;
-    x_offset = rank * p_w;
+    p_h = H / size;
+    y_offset = rank * p_h;
 
-    int M[H*p_w];
+    int M[W*p_h];
+    mandelbrot_grid(M, y_offset, p_h);
+    MPI_Send(M, H*p_h, MPI_INT, 0, 0, MPI_COMM_WORLD);
 
-    mandelbrot_grid(M, x_offset, p_w);
-    write_to_file(M);
+    if (rank == 0) {
+        int full_array[H*W];
+        int buff_array[W*p_h];
+        for (int i = 0; i < size; ++i) {
+            MPI_Recv(buff_array, W*p_h, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
+            for (int j = 0; j < W*p_h; ++j) {
+                full_array[i*W*p_h + j] = buff_array[j];
+            }
+        }
+        write_to_file(full_array);
+    }
 
-    rc = MPI_Finalize();
+    MPI_Finalize();
     return 0;
 }
