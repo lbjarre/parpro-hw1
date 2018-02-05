@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -14,6 +15,10 @@ def load_image(filepath):
     return np.array(read_vals, dtype=np.uint8)
 
 if __name__ == '__main__':
-    image_vals = load_image('color.txt')
+    try:
+        image_path = sys.argv[1]
+    except IndexError:
+        image_path = 'color.txt'
+    image_vals = load_image(image_path)
     plt.imshow(image_vals)
     plt.show()
