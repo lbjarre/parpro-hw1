@@ -47,17 +47,15 @@ void mandelbrot_grid(int *M, int y_offset, int p_height)
     }
 }
 
-void write_to_file(int *M)
+void write_to_file(int *M, FILE *fp, int process_height)
 {
     int i, j;
-    FILE *fp = fopen("color.txt", "w");
-    for (j = 0; j < PIXEL_H; ++j) {
+    for (j = 0; j < process_height; ++j) {
         for (i = 0; i < PIXEL_W; ++i) {
             fprintf(fp, "%hhu ", M[i + j*PIXEL_W]);
         }
         fprintf(fp, "\n");
     }
-    fclose(fp);
 }
 
 int main(int argc, char **argv)
@@ -79,16 +77,13 @@ int main(int argc, char **argv)
     }
 
     if (rank == 0) {
-        int full_array[PIXEL_H*PIXEL_W];
-        int *p = full_array;
-        for (i = 0; i < PIXEL_W*p_h; ++i) {
-            *p++ = M[i];
-        }
+        FILE *fp = fopen("color.txt", "w");
+        write_to_file(M, fp, p_h);
         for (i = 1; i < size; ++i) {
-            MPI_Recv(p, PIXEL_W*p_h, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
-            p += PIXEL_W*p_h;
+            MPI_Recv(M, PIXEL_H*p_h, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
+            write_to_file(M, fp, p_h);
         }
-        write_to_file(full_array);
+        fclose(fp);
     }
 
     MPI_Finalize();
