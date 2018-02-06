@@ -7,11 +7,11 @@
 #define NUMB_COLORS 255
 #define ESCAPE_DIST 2.0
 
-#define PIXEL_W 1024
-#define PIXEL_H 1024
+#define PIXEL_W  1024
+#define PIXEL_H  1024
 #define X_START -2.0
 #define X_W      4.0
-#define Y_START -2.0
+#define Y_START  2.0
 #define Y_H      4.0
 
 
@@ -28,26 +28,26 @@ int mandelbrot(complex double c)
     return i;
 }
 
-void mandelbrot_grid(int *M, int y_offset, int p_height)
+void mandelbrot_grid(int *M, int y_offset, int process_h)
 {
     int i, j;
     double x, y;
     complex double c;
 
     double dx = X_W/(PIXEL_W - 1);
-    double dy = Y_H/(PIXEL_H - 1); 
+    double dy = -Y_H/(PIXEL_H - 1); 
 
-    for (j = 0; j < p_height; ++j) {
+    for (j = 0; j < process_h; ++j) {
         y = (j + y_offset) * dy + Y_START;
         for (i = 0; i < PIXEL_W; ++i) {
             x = i * dx + X_START;
             c = x + y * I;
-            M[j*PIXEL_W + i] = mandelbrot(c);
+            *M++ = mandelbrot(c);
         }
     }
 }
 
-void write_to_file(int *M, FILE *fp, int process_height)
+void write_to_file(FILE *fp, int *M, int process_height)
 {
     int i, j;
     for (j = 0; j < process_height; ++j) {
@@ -78,10 +78,10 @@ int main(int argc, char **argv)
 
     if (rank == 0) {
         FILE *fp = fopen("color.txt", "w");
-        write_to_file(M, fp, p_h);
+        write_to_file(fp, M, p_h);
         for (i = 1; i < size; ++i) {
             MPI_Recv(M, PIXEL_H*p_h, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
-            write_to_file(M, fp, p_h);
+            write_to_file(fp, M, p_h);
         }
         fclose(fp);
     }
