@@ -13,3 +13,6 @@ and combined in the end to produce the image.
 The parallelization is implemented using MPI.
 OpenMPI was used as the MPI implementation while testing the code,
 but it should run fine on any other implementation.
+
+Testing if one can embedd images in MD:
+![Mandelbrot](mandelbrot/zoom1.pdf)
