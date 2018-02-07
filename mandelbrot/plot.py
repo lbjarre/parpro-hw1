@@ -2,7 +2,12 @@
 
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+from PIL import Image
+
+COLORMAP = 'coolwarm'
+DEFAULT_PATH = 'color.txt'
+SAVED_IMAGE_EXT = '.bmp'
 
 def load_image(filepath):
     
@@ -16,9 +21,15 @@ def load_image(filepath):
 
 if __name__ == '__main__':
     try:
-        image_path = sys.argv[1]
+        filepath = sys.argv[1]
     except IndexError:
-        image_path = 'color.txt'
-    image_vals = load_image(image_path)
-    plt.imshow(image_vals)
-    plt.show()
+        filepath = DEFAULT_PATH
+
+    image_vals = load_image(filepath)
+    cmap = cm.get_cmap(COLORMAP)
+    image_vals = np.uint8(255 * cmap(image_vals))
+    image = Image.fromarray(image_vals)
+
+    savepath = filepath.split('.')[0] + SAVED_IMAGE_EXT
+    image.save(savepath)
+
