@@ -1,0 +1,327 @@
+\documentclass{article}
+
+\usepackage{mathtools}
+\usepackage{geometry}
+\usepackage{graphicx}
+\usepackage{titlesec}
+\usepackage{listings}
+\usepackage{placeins}
+\usepackage{subcaption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{cleveref}
+
+\geometry{
+  top=2cm,
+  bottom=2cm,
+  left=3.5cm,
+  right=3.5cm
+}
+
+\titleformat{\section}
+  {\large\bfseries}
+  {\llap{\hspace*{-2.5em}Q\thesection:\hfill}}
+  {0pt}
+  {}
+\titlespacing*{\section}
+  {0pt}
+  {2ex}
+  {1ex}
+\titleformat{\subsection}
+  {\itshape\bfseries}
+  {\llap{\hspace{-2.5em}
+  \rm\bf(\alph{subsection})
+  \hfill}}
+  {0pt}
+  {}
+\titlespacing*{\subsection}
+  {0pt}
+  {2ex}
+  {1ex}
+\titleclass{\appx}{straight}[\section]
+\newcounter{appx}
+\renewcommand{\theappx}{\Alph{appx}}
+\titleformat{\appx}
+  {\large\bfseries}
+  {\llap{\hspace*{-6.6em}Appendix \theappx:\hfill}}
+  {0pt}
+  {}
+\titlespacing*{\appx}
+  {0pt}
+  {2ex}
+  {1ex}
+
+
+\newcommand{\mail}[1]{
+  \href{mailto:#1}{#1}
+}
+
+\lstset{
+  frame=single,
+  numbers=left,
+  breaklines=true,
+  basicstyle=\small
+}
+
+\newcommand{\codesnippet}[5]{
+  \begin{figure}[!ht]
+    \lstinputlisting[
+      language=#2,
+      firstline=#3,
+      lastline=#4,
+      firstnumber=#3
+    ]{#1}
+  #5
+  \end{figure}
+}
+
+\newcommand{\mandelbrotsource}{../mandelbrot/mandelbrot.c}
+\newcommand{\plotsource}{../mandelbrot/plot.py}
+
+\begin{document}
+
+\begin{center}
+  \textbf{
+    \LARGE Homework 1 \\
+    \large SF2568 - Parallel Computation for Large Scale Problems \\
+    Lukas Bjarre - \mail{lbjarre@kth.se} \\
+    \rule{0.75\textwidth}{0.4pt}
+  }
+\end{center}
+
+\section{Difference between a \emph{process} and a \emph{processor}}
+A \emph{process} is defined by the instructions that are needed to compute a problem.
+A \emph{processor} refers to the physical hardware which executes a process.
+
+\section{Performance calculation}
+$10\%$ of the time the computer is operating at single processor performance, i.e. $2$ Gflops.
+The remaining $90\%$ of the time all 100 processors are computing in parallel
+at a performance of $200$ Gflops.
+The total performance will therefore be given as
+\begin{equation}
+  0.1 \cdot 2 + 0.9 \cdot 200 = 180.2 \text{ Gflops}
+\end{equation}
+
+\section{Is a system efficiency larger than 100\% possible?}
+The system efficiency $\eta_P$ for $P$ processors is given by
+\begin{equation}
+  \label{eq:sysefficiency}
+  \eta_P = \frac{S_P}{P} = \frac{T^*_s}{PT_P}
+\end{equation}
+where $T^*_s$ is the fastest serial runtime
+and $T_P$ is the parallel runtime for $P$ processes.
+Assuming (unrealistically) no communication in the parallel implementation,
+the optimal parallel runtime will be $T^*_P = T^*_sP^{-1}$.
+This implementation inserted into \eqref{eq:sysefficiency} would result in
+a system efficiency of $100\%$.
+However, this is a lower bound for the parallel runtime,
+hence $\eta_P \leq 1$.
+
+\section{Modified Parallel Rank Sort}
+Since we have 10 times as many elements as processors 10 elements can be allocated to each processor.
+Each processor has to then loop through each of the allocated elements and execute the original
+Parallel Rank Sort for each of them.
+The resulting rank arrays needs only to be shared to the rest of the processors,
+which can be done for example in a recursive doubling procedure.
+
+\section{Parallel speedup}
+\subsection{What fraction of the serial runtime is spent in serial procedures?}
+We have $T^*_s = 64$ s and $T_P = 22$ s for $P=8$.
+The serial fraction of the program depends on which law you apply to the numbers.
+The serial fraction as given by Amdahl's law is
+\begin{equation}
+  \begin{aligned}
+    f
+    &= \frac{PT_P - T^*_s}{T^*_s\left( P - 1 \right)} \\
+    &= \frac{8\cdot 22 - 64}{64\cdot 7} \\
+    &= \frac{1}{4} = 0.25
+  \end{aligned}
+\end{equation}
+The serial fraction as given by Gustafson's law is
+\begin{equation}
+  \begin{aligned}
+    f'
+    &= \frac{PT_P - T^*_s}{T_P\left( P - 1 \right)} \\
+    &= \frac{8\cdot 22 - 64}{22\cdot 7} \\
+    &= \frac{8}{11} \approx 0.72
+  \end{aligned}
+\end{equation}
+
+\subsection{Determine the parallel speedup}
+The speedup once again depends on which law you apply.
+The speedup as given by Amdahl is
+\begin{equation}
+  \begin{aligned}
+    S_P
+    &= \frac{1}{\left( 1-f \right)P^{-1} + f} \\
+    &= \frac{1}{0.75P^{-1} + 0.25}
+  \end{aligned}
+\end{equation}
+For $P=8$ we have a speedup of $S_8 \approx 2.9$.
+We also see that even if we let $P\rightarrow\infty$,
+the speedup would only converge to $f^{-1} = 4$.
+
+The scaled speedup as given by Gustafson is
+\begin{equation}
+  \begin{aligned}
+    S'_P
+    &= f' + (1 - f')P \\
+    &= \frac{8 + 3P}{11}
+  \end{aligned}
+\end{equation}
+For $P=8$ we have a scaled speedup of $S'_8 \approx 2.9$,
+i.e. the same as predicted by Amdahl.
+However, unlike $S_P$, $S'_P$ grows unbounded as $P\rightarrow\infty$.
+
+\subsection{Parallel speedup on three phased program}
+We notate the serial runtimes for each program phase as $T_{pi}$,
+where $i=1,\,2,\,3$ describes the different phases.
+We also know the relation between each phase's serial runtime and the optimal serial runtime
+as $T_{p1} = 0.2T^*_s$, $T_{p2} = 0.2T^*_s$, and $T_{p3} = 0.6T^*_s$.
+In the parallel version of the program each program phase will be sped up by a optimal
+factor of $k^*_{pi}$ for each program phase.
+We will assume perfect speedup for each phase given the given optimal process count,
+i.e. $k^*_{pi} = P^{*-1}_{pi}$ for optimal process count $P^{*-1}_{pi}$.
+The total speedup will be
+\begin{equation}
+  \begin{aligned}
+    S_P
+    &= \frac{T^*_s}{T^*_s\left( 0.2k^*_{p1} + 0.2k^*_{p2} + 0.6k^*_{p3} \right)} \\
+    &= \frac{1}{\frac{1}{25} + \frac{1}{50} + \frac{3}{75}} \\
+    &= \frac{750}{75} \\
+    &= 10
+  \end{aligned}
+\end{equation}
+
+\section{Parallel Mandelbrot implementation}
+
+\subsection*{Implementation}
+My parallel implementation of the mandelbrot set calculation is similair to the one
+presented in the lecture slides,
+except with some small alterations to increase usability and performance.
+The code can be found in the appendix.
+
+The first change is how the data is distributed between the processors.
+The version presented in the lecture slides separated the complex plane grid into vertical slices,
+i.e. common $x$-coordinates and iterating over the $y$-coordinates.
+However, when the data is saved we want to save rows and not columns,
+i.e. common $y$-coordinates and iterating over the $x$-coordinates.
+I therefore changed the data distribution to horizontal strips of the complex plane grid instead
+to better accomodate the saved data structure.
+
+The second change has also to do with the saved data structure.
+I wanted to make the saved file as similair to the complex plane as possible.
+Since the complex plane usually is plotted with positive complex values on the top
+and the negatives on the bottom,
+the first row of the saved file should contain the highest complex values
+and the last row the file the lowest.
+Therefore, the sign of the starting $y$-position
+and the direction in which the complex values was iterated in was flipped.
+
+Finally, the viewport in which the complex plane is evaluated was generalized.
+The method used in the lecture slide assumed a viewport of $[-b,\,b] \times [-b,\,b]$,
+i.e. a square with sides $2b$ placed with its center at the origin.
+This was changed to a viewport of $[x_s,\,x_s+x_w] \times [y_s,\,y_s-y_h]$,
+i.e. a more general rectangle placed with its left upper corned at $(x_s,\,y_s)$
+and with width $x_w$ and height $y_h$.
+
+\subsection*{Output Images}
+
+\begin{figure}[!ht]
+  \centering
+  \includegraphics[width=0.5\textwidth]{../mandelbrot/full.pdf}
+  \caption{Plot of the Mandelbrot set within $[-2,\,2] \times i[-2,\,2]$.}
+  \label{fig:standardview}
+\end{figure}
+
+\begin{figure}[!ht]
+  \centering
+
+  \begin{subfigure}[t]{0.45\textwidth}
+    \centering
+    \includegraphics[width=0.9\textwidth]{../mandelbrot/zoom1.pdf}
+    \caption{$[-0.970,\,-0.995] \times i[0.245,\,0.270]$}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[t]{0.45\textwidth}
+    \centering
+    \includegraphics[width=0.9\textwidth]{../mandelbrot/zoom2.pdf}
+    \caption{$[-1.50,\,-1.55] \times i[-0.025,\,0.025]$}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[t]{0.45\textwidth}
+    \centering
+    \includegraphics[width=0.9\textwidth]{../mandelbrot/zoom3.pdf}
+    \caption{$[0.3981,\,0.3982] \times i[0.23312,\,0.23322]$}
+  \end{subfigure}
+  ~
+  \begin{subfigure}[t]{0.45\textwidth}
+    \centering
+    \includegraphics[width=0.9\textwidth]{../mandelbrot/zoom4.pdf}
+    \caption{$[-0.1555,\,-0.1535] \times i[0.6522,\,0.6542]$}
+  \end{subfigure}
+
+  \caption{Various zoomed in plots on the Mandelbrot set.}
+\end{figure}
+
+\newpage
+\appx{Parallel Mandelbrot Sourcecode}
+Below is the source code for the program which implements the parallel version
+of the Mandelbrot set calculation.
+The code is quite lengthy, so it is broken down into smaller snippets containing separate functions
+together with a small annotation describing its function.
+
+\codesnippet{\mandelbrotsource}{C}{1}{8}{
+Library imports and our constants.
+The constants define how the color picking is set by the maximum iteration count
+(the number of possible colors)
+and the squared escape distance that for the semi-stable convergence definition.
+Constants defining the pixel size of the viewport are also set.
+}
+
+\codesnippet{\mandelbrotsource}{C}{10}{27}{
+The function which assigns colors to each pixel.
+This implementation uses slightly more memory than the straight forward approach,
+but saves a couple of operations for each loop.
+}
+
+\codesnippet{\mandelbrotsource}{C}{29}{45}{
+Next we have the main calculation loop for each process.
+It iterates over the pixels assigned to the processor,
+converts each pixel to a complex number,
+and saves the calculated color value in the array $M$.
+}
+
+\codesnippet{\mandelbrotsource}{C}{47}{56}{
+The function for writing the results to a file is fairly basic.
+}
+
+\codesnippet{\mandelbrotsource}{C}{58}{71}{
+A small function for setting up all the MPI stuff outside of the main procedure.
+This function also checks to make sure that the number of processes
+evenly divide the pixel grid height.
+If not, it returns a negative flag to main.
+}
+
+\codesnippet{\mandelbrotsource}{C}{73}{89}{
+This function sets the variables defining the viewport,
+either through argv or as defaults if no arguments are passed.
+Returns a negative flag if argv is of incorrect length.
+}
+
+\codesnippet{\mandelbrotsource}{C}{91}{130}{
+The main procedure calls the initializing functions,
+sets up and calculates the mandelbrot for the process height,
+and sends everything to the 0 rank process.
+The 0 rank process saves some memory by overwriting the already allocated $M$-vector
+after writing its contents to the output file
+}
+
+\FloatBarrier
+\newpage
+\appx{Plotting Sourcecode}
+Below is the sourcecode for the Python script
+used to read the data produced by the C code and produce images.
+\codesnippet{\plotsource}{Python}{1}{34}{}
+
+\end{document}
+
