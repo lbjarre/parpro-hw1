@@ -96,7 +96,7 @@ A \emph{processor} refers to the physical hardware which executes a process.
 $10\%$ of the time the computer is operating at single processor performance, i.e. $2$ Gflops.
 The remaining $90\%$ of the time all 100 processors are computing in parallel
 at a performance of $200$ Gflops.
-The total performance will therefore be given as
+The total performance will therefore be
 \begin{equation}
   0.1 \cdot 2 + 0.9 \cdot 200 = 180.2 \text{ Gflops}
 \end{equation}
@@ -120,7 +120,7 @@ hence $\eta_P \leq 1$.
 Since we have 10 times as many elements as processors 10 elements can be allocated to each processor.
 Each processor has to then loop through each of the allocated elements and execute the original
 Parallel Rank Sort for each of them.
-The resulting rank arrays needs only to be shared to the rest of the processors,
+The resulting rank arrays then needs to be shared to the rest of the processors,
 which can be done for example in a recursive doubling procedure.
 
 \section{Parallel speedup}
@@ -158,7 +158,7 @@ The speedup as given by Amdahl is
 \end{equation}
 For $P=8$ we have a speedup of $S_8 \approx 2.9$.
 We also see that even if we let $P\rightarrow\infty$,
-the speedup would only converge to $f^{-1} = 4$.
+the speedup would only converge to $S_\infty = 4$.
 
 The scaled speedup as given by Gustafson is
 \begin{equation}
@@ -221,14 +221,14 @@ Finally, the viewport in which the complex plane is evaluated was generalized.
 The method used in the lecture slide assumed a viewport of $[-b,\,b] \times [-b,\,b]$,
 i.e. a square with sides $2b$ placed with its center at the origin.
 This was changed to a viewport of $[x_s,\,x_s+x_w] \times [y_s,\,y_s-y_h]$,
-i.e. a more general rectangle placed with its left upper corned at $(x_s,\,y_s)$
+i.e. a more general rectangle placed with its upper left corner at $(x_s,\,y_s)$
 and with width $x_w$ and height $y_h$.
 
 \subsection*{Output Images}
-
+Below are some images produced by the code.
 \begin{figure}[!ht]
   \centering
-  \includegraphics[width=0.5\textwidth]{../mandelbrot/full.pdf}
+  \includegraphics[width=0.45\textwidth]{../mandelbrot/full.pdf}
   \caption{Plot of the Mandelbrot set within $[-2,\,2] \times i[-2,\,2]$.}
   \label{fig:standardview}
 \end{figure}
@@ -280,7 +280,7 @@ Constants defining the pixel size of the viewport are also set.
 
 \codesnippet{\mandelbrotsource}{C}{10}{27}{
 The function which assigns colors to each pixel.
-This implementation uses slightly more memory than the straight forward approach,
+This implementation uses slightly more memory than the straight-forward approach,
 but saves a couple of operations for each loop.
 }
 
